@@ -1,6 +1,6 @@
 (ns jkkramer.verily
   (:require [clojure.string :as string])
-  #+clj (:import java.util.Date))
+  #?(:clj (:import java.util.Date)))
 
 (defn seqify [x]
   (if-not (sequential? x) [x] x))
@@ -22,7 +22,9 @@
 (defn make-validator [keys bad-pred msg]
   (let [bad-pred* #(try
                      (bad-pred %)
-                     (catch #+clj Exception #+cljs js/Error _ true))]
+                     (catch
+                       #?(:clj Exception
+                          :cljs :default) e))]
     (fn [m]
       (let [bad-keys (filter #(bad-pred* (get m % (get-in m (expand-name %) ::absent)))
                              (seqify keys))]
@@ -134,9 +136,9 @@
   (make-validator
     keys #(and (not= ::absent %)
                (not (string/blank? %))
-               (or #+clj (not (try
-                                (java.net.URL. %)
-                                (catch Exception _)))
+               (or #?(:clj (not (try
+                                 (java.net.URL. %)
+                                 (catch Exception _))))
                    ;; TODO: better cljs impl
                    (not (re-find #"^https?://" %))))
     (or msg "must be a valid website URL")))
@@ -147,8 +149,8 @@
                (not (string/blank? %))
                (not (try
                       ;; TODO: better cljs impl
-                      #+clj (java.net.URL. %) #+cljs (re-find #"^[a-zA-Z]+://" %)
-                      (catch #+clj Exception #+cljs js/Error _))))
+                      #?(:clj (java.net.URL. %) :cljs (re-find #"^[a-zA-Z]+://" %))
+                      (catch #?(:clj Exception :cljs :default) e))))
     (or msg "must be a valid URL")))
 
 (defn link-url
@@ -202,7 +204,7 @@
 
 (defn floating-point [keys & [msg]]
   (make-validator
-    keys #(and (not= ::absent %) (not (nil? %)) (not (#+clj float? #+cljs number? %)))
+    keys #(and (not= ::absent %) (not (nil? %)) (not #?(:clj (float? %) :cljs (number? %))))
     (or msg "must be a decimal number")))
 
 (defn floating-points [keys & [msg]]
@@ -210,17 +212,17 @@
     keys (fn [v]
            (and (not= ::absent v)
                 (or (and (not (nil? v)) (not (sequential? v)))
-                    (some #(not (#+clj float? #+cljs number? %)) v))))
+                    (some #(not #?(:clj (float? %) :cljs (number? %))) v))))
     (or msg "must be decimal numbers")))
 
-#+cljs
-(defn decimal-str? [x]
-  (and (string? x)
-       (re-matches #"[0-9\.]+" x)))
+#?(:cljs
+    (defn decimal-str? [x]
+      (and (string? x)
+           (re-matches #"[0-9\.]+" x))))
 
 (defn decimal [keys & [msg]]
   (make-validator
-    keys #(and (not= ::absent %) (not (nil? %)) (not (#+clj decimal? #+cljs decimal-str? %)))
+    keys #(and (not= ::absent %) (not (nil? %)) (not #?(:clj (decimal? %) :cljs (decimal-str? %))))
     (or msg "must be a decimal number")))
 
 (defn decimals [keys & [msg]]
@@ -228,7 +230,7 @@
     keys (fn [v]
            (and (not= ::absent v)
                 (or (and (not (nil? v)) (not (sequential? v)))
-                    (some #(not (#+clj decimal? #+cljs decimal-str? %)) v))))
+                    (some #(not #?(:clj (decimal? %) :cljs (decimal-str? %))) v))))
     (or msg "must be decimal numbers")))
 
 (defn min-val [min keys & [msg]]
@@ -273,7 +275,7 @@
 (defn date [keys & [msg]]
   (make-validator
     keys #(and (not= ::absent %) (not (nil? %))
-               (not (instance? #+clj Date #+cljs js/Date %)))
+               (not (instance? #?(:clj Date :cljs js/Date) %)))
     (or msg "must be a date")))
 
 (defn dates [keys & [msg]]
@@ -281,39 +283,39 @@
     keys (fn [v]
            (and (not= ::absent v)
                 (or (and (not (nil? v)) (not (sequential? v)))
-                    (some #(not (instance? #+clj Date #+cljs js/Date %)) v))))
+                    (some #(not (instance? #?(:clj Date :cljs js/Date) %)) v))))
     (or msg "must be dates")))
 
 (defn- after? [d1 d2]
-  #+clj (.after ^Date d1 d2)
-  #+cljs (< d2 d1))
+  #?(:clj (.after ^Date d1 d2)
+     :cljs (< d2 d1)))
 
 (defn after [date keys & [msg]]
   (make-validator
     keys #(and (not= ::absent %)
                (not (nil? %))
                (or
-                 (not (instance? #+clj Date #+cljs js/Date %))
+                 (not (instance? #?(:clj Date :cljs js/Date) %))
                  (not (after? % date))))
     (or msg (str "must be after " date))))
 
 (defn- before? [d1 d2]
-  #+clj (.before ^Date d1 d2)
-  #+cljs (< d1 d2))
+  #?(:clj (.before ^Date d1 d2)
+     :cljs (< d1 d2)))
 
 (defn before [date keys & [msg]]
   (make-validator
     keys #(and (not= ::absent %)
                (not (nil? %))
                (or
-                 (not (instance? #+clj Date #+cljs js/Date %))
+                 (not (instance? #?(:clj Date :cljs js/Date) %))
                  (not (before? % date))))
     (or msg (str "must be before " date))))
 
 (defn- digits [n]
-  #+clj (map #(Character/digit % 10) (str n))
-  #+cljs (map #(- (.charCodeAt % 0) 48) (str n)))
- 
+  #?(:clj (map #(Character/digit % 10) (str n))
+     :cljs (map #(- (.charCodeAt % 0) 48) (str n))))
+
 (defn- luhn? [x]
   (let [n (if (string? x)
             (string/replace x #"[^0-9]" "")

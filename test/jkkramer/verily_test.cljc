@@ -1,9 +1,9 @@
 (ns jkkramer.verily-test
-  #+cljs (:require-macros [cemerick.cljs.test :refer [is are deftest run-tests]])
+  #?(:cljs (:require-macros [cemerick.cljs.test :refer [is are deftest run-tests]]))
   (:require [jkkramer.verily :as v]
-            #+cljs [cemerick.cljs.test :as t]
-            #+clj [clojure.test :refer [is are deftest run-tests]])
-  #+clj (:import java.util.Date))
+            #?(:cljs [cemerick.cljs.test :as t])
+            #?(:clj [clojure.test :refer [is are deftest run-tests]]))
+  #?(:clj (:import java.util.Date)))
 
 (def m
   {:a 1
@@ -189,16 +189,16 @@
   (is (seq ((v/bools [:a :d :f :j :k]) m))))
 
 (deftest test-integer
-  #+clj (is (empty? ((v/integer [:a :b :c :d :e :f])
-                      {:a 1 :b 1N :c (int 1)
-                       :d (Byte. (byte 1))
-                       :e (Short. (short 1))
-                       :f (Integer. 1)})))
+  #?(:clj (is (empty? ((v/integer [:a :b :c :d :e :f])
+                       {:a 1 :b 1N :c (int 1)
+                        :d (Byte. (byte 1))
+                        :e (Short. (short 1))
+                        :f (Integer. 1)}))))
   (is (empty? ((v/integer :g) m)))
   (is (empty? ((v/integer :x) m)))
-  #+clj (is (seq ((v/integer :a) {:a 1.0})))
-  #+clj (is (seq ((v/integer :a) {:a 1.0M})))
-  #+clj (is (seq ((v/integer :a) {:a (float 1.0)})))
+  #?(:clj (is (seq ((v/integer :a) {:a 1.0}))))
+  #?(:clj (is (seq ((v/integer :a) {:a 1.0M}))))
+  #?(:clj (is (seq ((v/integer :a) {:a (float 1.0)}))))
   (is (seq ((v/integer :d) m)))
   (is (seq ((v/integer :f) m)))
   (is (seq ((v/integer :j) m)))
@@ -215,7 +215,7 @@
 (deftest test-floating-point
   (is (empty? ((v/floating-point :a) {:a 1.1})))
   (is (empty? ((v/floating-point :a) {:a (float 1.1)})))
-  #+clj (is (seq ((v/floating-point :a) {:a 1.1M})))
+  #?(:clj (is (seq ((v/floating-point :a) {:a 1.1M}))))
   (is (empty? ((v/floating-point :a) {:a nil})))
   (is (empty? ((v/floating-point :x) m)))
   (is (seq ((v/floating-point [:a :d :j :f]) m))))
@@ -228,24 +228,24 @@
   (is (seq ((v/floating-points [:a :d :f :j :k]) m))))
 
 (deftest test-decimal
-  #+clj (is (empty? ((v/decimal :a) {:a 1.1M})))
-  #+cljs (is (empty? ((v/decimal :a) {:a "1.1"})))
-  #+clj (is (seq ((v/decimal :a) {:a 1.1})))
-  #+clj (is (seq ((v/decimal :a) {:a (float 1.1)})))
+  #?(:clj (is (empty? ((v/decimal :a) {:a 1.1M}))))
+  #?(:cljs (is (empty? ((v/decimal :a) {:a "1.1"}))))
+  #?(:clj (is (seq ((v/decimal :a) {:a 1.1}))))
+  #?(:clj (is (seq ((v/decimal :a) {:a (float 1.1)}))))
   (is (empty? ((v/decimal :a) {:a nil})))
   (is (empty? ((v/decimal :x) m)))
   (is (seq ((v/decimal [:a :d :j :f]) m))))
 
 (deftest test-decimals
-  #+clj (is (empty? ((v/decimals :a) {:a [1.0M 1.1M 1.2M]})))
-  #+cljs (is (empty? ((v/decimals :a) {:a ["1.0" "1.1" "1.2"]})))
+  #?(:clj (is (empty? ((v/decimals :a) {:a [1.0M 1.1M 1.2M]}))))
+  #?(:cljs (is (empty? ((v/decimals :a) {:a ["1.0" "1.1" "1.2"]}))))
   (is (empty? ((v/decimals :a) {:a []})))
   (is (empty? ((v/decimals :a) {:a nil})))
   (is (empty? ((v/decimals :x) m)))
   (is (seq ((v/decimals [:a :d :f :j :k]) m))))
 
 (deftest test-min-val
-  #+clj (is (empty? ((v/min-val 3 [:a :b :c]) {:a 3 :b 3.0 :c 3.0M})))
+  #?(:clj (is (empty? ((v/min-val 3 [:a :b :c]) {:a 3 :b 3.0 :c 3.0M}))))
   (is (seq ((v/min-val 3 :a) {:a 2})))
   (is (empty? ((v/min-val 3 :a) {:a 4})))
   (is (seq ((v/min-val 3 :a) {:a "3"})))
@@ -254,7 +254,7 @@
   (is (empty? ((v/min-val 3 :x) m))))
 
 (deftest test-max-val
-  #+clj (is (empty? ((v/max-val 3 [:a :b :c]) {:a 3 :b 3.0 :c 3.0M})))
+  #?(:clj (is (empty? ((v/max-val 3 [:a :b :c]) {:a 3 :b 3.0 :c 3.0M}))))
   (is (seq ((v/max-val 3 :a) {:a 4})))
   (is (empty? ((v/max-val 3 :a) {:a 2})))
   (is (seq ((v/max-val 3 :a) {:a "3"})))
@@ -272,24 +272,24 @@
   (is (empty? ((v/within 1 10 :x) m))))
 
 (deftest test-positive
-  (is (empty? ((v/positive [:a :b :c :d]) #+clj {:a 3 :b 3.0 :c 3.0M :d 0.000001}
-                                          #+cljs {:a 3 :b 3.0 :c 3.01 :d 0.000001})))
+  (is (empty? ((v/positive [:a :b :c :d]) #?(:clj {:a 3 :b 3.0 :c 3.0M :d 0.000001}
+                                             :cljs {:a 3 :b 3.0 :c 3.01 :d 0.000001}))))
   (is (seq ((v/positive :a) {:a 0})))
   (is (seq ((v/positive :a) {:a -1})))
   (is (seq ((v/positive :a) {:a -1.0})))
-  #+clj (is (seq ((v/positive :a) {:a -1.0M})))
+  #?(:clj (is (seq ((v/positive :a) {:a -1.0M}))))
   (is (seq ((v/positive :a) {:a "3"})))
   (is (seq ((v/positive :a) {:a ""})))
   (is (empty? ((v/positive 3 :g) m)))
   (is (empty? ((v/positive 3 :x) m))))
 
 (deftest test-negative
-  (is (seq ((v/negative [:a :b :c :d]) #+clj {:a 3 :b 3.0 :c 3.0M :d 0.000001}
-                                       #+cljs {:a 3 :b 3.0 :c 3.01 :d 0.000001})))
+  (is (seq ((v/negative [:a :b :c :d]) #?(:clj {:a 3 :b 3.0 :c 3.0M :d 0.000001}
+                                          :cljs {:a 3 :b 3.0 :c 3.01 :d 0.000001}))))
   (is (seq ((v/negative :a) {:a 0})))
   (is (empty? ((v/negative :a) {:a -1})))
   (is (empty? ((v/negative :a) {:a -1.0})))
-  #+clj (is (empty? ((v/negative :a) {:a -1.0M})))
+  #?(:clj (is (empty? ((v/negative :a) {:a -1.0M}))))
   (is (seq ((v/negative :a) {:a "3"})))
   (is (seq ((v/negative :a) {:a ""})))
   (is (empty? ((v/negative 3 :g) m)))
@@ -297,10 +297,10 @@
 
 (defn- mkdate
   ([]
-    #+clj (Date.) #+cljs (js/Date.))
+   #?(:clj (Date.) :cljs (js/Date.)))
   ([y m d]
-    #+clj (Date. (+ y 1900) (dec m) d)
-    #+cljs (doto (js/Date.) (.setFullYear y (dec m) d 0 0 0))))
+   #?(:clj (Date. (+ y 1900) (dec m) d)
+      :cljs (doto (js/Date.) (.setFullYear y (dec m) d 0 0 0)))))
 
 (deftest test-date
   (is (empty? ((v/date :a) {:a (mkdate)})))
